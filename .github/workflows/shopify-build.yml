@@ -71,5 +71,6 @@ jobs:
       if: success()
       run: |
         aws cloudfront create-invalidation \
-          --distribution-id E20OOV8XU21OSR \
+          --distribution-id ${{ secrets.AWS_ACCESS_KEY_ID_CF }} \
           --paths "/*"
+          
