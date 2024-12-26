@@ -1,0 +1,48 @@
+name: Build and Deploy to AWS S3
+
+on:
+  push:
+    branches:
+      - main # Thay "main" bằng branch mà bạn muốn theo dõi
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' # Thay bằng phiên bản Node.js bạn cần
+        cache: 'yarn'
+
+    - name: Install dependencies
+      run: yarn install # Thay bằng "npm install" hoặc "pnpm install" nếu bạn dùng npm hoặc pnpm
+
+    - name: Build application
+      run: yarn build # Thay bằng "npm run build" hoặc "pnpm run build" nếu bạn dùng npm hoặc pnpm
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: "us-east-1" # Thay bằng region của bucket S3 của bạn
+
+    - name: Sync built files to S3
+      run: |
+        aws s3 sync ./build/ s3://shopify-vpshunter \
+          --delete \
+          --exclude ".git/*" \
+          --exclude "node_modules/*" \
+          --exclude ".github/*"
+
+    - name: Invalidate CloudFront Cache (Optional)
+      if: success()
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id your-cloudfront-distribution-id \
+          --paths "/*"
