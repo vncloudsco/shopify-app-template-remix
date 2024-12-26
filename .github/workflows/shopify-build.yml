@@ -28,7 +28,7 @@ jobs:
         elif [ -f "pnpm-lock.yaml" ]; then
           echo "manager=pnpm" >> $GITHUB_ENV
         else
-          echo "No lock file found. Falling back to npm."
+          echo "No lock file found. Falling back to npm install."
           echo "manager=npm" >> $GITHUB_ENV
         fi
 
@@ -37,7 +37,12 @@ jobs:
         if [ "${{ env.manager }}" == "yarn" ]; then
           yarn install --production
         elif [ "${{ env.manager }}" == "npm" ]; then
-          npm ci --omit=dev && npm cache clean --force
+          if [ -f "package-lock.json" ]; then
+            npm ci --omit=dev && npm cache clean --force
+          else
+            echo "No package-lock.json found. Using npm install instead."
+            npm install --omit=dev && npm cache clean --force
+          fi
         elif [ "${{ env.manager }}" == "pnpm" ]; then
           pnpm install --prod
         fi
