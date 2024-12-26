@@ -28,8 +28,8 @@ jobs:
         elif [ -f "pnpm-lock.yaml" ]; then
           echo "manager=pnpm" >> $GITHUB_ENV
         else
-          echo "No lock file found. Exiting."
-          exit 1
+          echo "No lock file found. Falling back to npm."
+          echo "manager=npm" >> $GITHUB_ENV
         fi
 
     - name: Install dependencies
@@ -71,5 +71,5 @@ jobs:
       if: success()
       run: |
         aws cloudfront create-invalidation \
-          --distribution-id your-cloudfront-distribution-id \
+          --distribution-id E20OOV8XU21OSR \
           --paths "/*"
