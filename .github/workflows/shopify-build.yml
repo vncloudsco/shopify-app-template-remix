@@ -17,13 +17,40 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '16' # Thay bằng phiên bản Node.js bạn cần
-        cache: 'yarn'
+
+    - name: Detect package manager
+      id: detect-package-manager
+      run: |
+        if [ -f "yarn.lock" ]; then
+          echo "manager=yarn" >> $GITHUB_ENV
+        elif [ -f "package-lock.json" ]; then
+          echo "manager=npm" >> $GITHUB_ENV
+        elif [ -f "pnpm-lock.yaml" ]; then
+          echo "manager=pnpm" >> $GITHUB_ENV
+        else
+          echo "No lock file found. Exiting."
+          exit 1
+        fi
 
     - name: Install dependencies
-      run: yarn install # Thay bằng "npm install" hoặc "pnpm install" nếu bạn dùng npm hoặc pnpm
+      run: |
+        if [ "${{ env.manager }}" == "yarn" ]; then
+          yarn install
+        elif [ "${{ env.manager }}" == "npm" ]; then
+          npm install
+        elif [ "${{ env.manager }}" == "pnpm" ]; then
+          pnpm install
+        fi
 
     - name: Build application
-      run: yarn build # Thay bằng "npm run build" hoặc "pnpm run build" nếu bạn dùng npm hoặc pnpm
+      run: |
+        if [ "${{ env.manager }}" == "yarn" ]; then
+          yarn build
+        elif [ "${{ env.manager }}" == "npm" ]; then
+          npm run build
+        elif [ "${{ env.manager }}" == "pnpm" ]; then
+          pnpm run build
+        fi
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -34,7 +61,7 @@ jobs:
 
     - name: Sync built files to S3
       run: |
-        aws s3 sync ./build/ s3://shopify-vpshunter \
+        aws s3 sync ./build/ s3://your-bucket-name \
           --delete \
           --exclude ".git/*" \
           --exclude "node_modules/*" \
